@@ -36,9 +36,9 @@ Chip8::Chip8() {
     width = 64;
     hight = 32;
 
-    mvprintw(0, 65, "sizeof mem %d\n", sizeof(ram));
-    mvprintw(1, 65, "sizeof registers %d\n", sizeof(V));
-    mvprintw(2, 65, "sizeof stack %d\n", sizeof(stack));
+    mvprintw(0, 65, "sizeof mem %d", sizeof(ram));
+    mvprintw(1, 65, "sizeof registers %d", sizeof(V));
+    mvprintw(2, 65, "sizeof stack %d", sizeof(stack));
 }
 
 void Chip8::load_hex_digit_sprites() {
@@ -60,8 +60,8 @@ void Chip8::load_hex_digit_sprites() {
     ram[75] = 0xF0; ram[76] = 0x80; ram[77] = 0xF0; ram[78] = 0x80; ram[79] = 0x80; // F
 }
 
-char PIXEL_OFF = ' ';
-char PIXEL_ON  = '#';
+char PIXEL_OFF = 32;
+char PIXEL_ON  = 254;
 
 void Chip8::init_screen_buffs() {
     screen = new uint8_t*[width]();
@@ -91,7 +91,6 @@ uint8_t Chip8::draw_sprite(uint8_t Vx, uint8_t Vy, uint16_t I, uint8_t n) {
                 continue;
             uint8_t tmp = screen[pos_x][pos_y];
             screen[pos_x][pos_y] ^= ((sprite_line >> shift) & 1);
-            // screen[pos_x][pos_y] = ((sprite_line >> shift) & 1); // works better, don't know why
             if ((tmp == 1) && (screen[pos_x][pos_y] == 0)) {
                 vf = 1;
             }
@@ -139,7 +138,7 @@ void Chip8::run() {
 
     int cnt = 0;
     while(true) {
-        mvprintw(0, 65, "---PC [0x%x] {%d}---\n", PC, cnt++);
+        mvprintw(0, 65, "---PC [0x%x] {%d}---", PC, cnt++);
         high_resolution_clock::time_point s = high_resolution_clock::now();
         execute_one_instruction();
         high_resolution_clock::time_point f = high_resolution_clock::now();
@@ -147,8 +146,9 @@ void Chip8::run() {
         duration<double> time_span = duration_cast<duration<double> >(f - s);
 
         double d = (1.0/500.0 - time_span.count());
-        if (cnt % 32 == 0) 
+        if (cnt % 32 == 0)  {
             getch();
+        }
     }
 }
 
@@ -176,13 +176,13 @@ void Chip8::execute_one_instruction() {
     uint8_t kk = byte2_odd;
     uint8_t F = 0xF;
     
-    mvprintw(1, 65, "opcode [0x%02x]  [%d]\n", f, f);
-    mvprintw(2, 65, "nnn    [0x%04x]  [%d]\n", nnn, nnn);
-    mvprintw(3, 65, "n      [0x%02x]  [%d]\n", n, n);
-    mvprintw(4, 65, "x      [0x%02x]  [%d]\n", x, x);
-    mvprintw(5, 65, "y      [0x%02x]  [%d]\n", y, y);
-    mvprintw(6, 65, "kk     [0x%02x]  [%d]\n", kk, kk);
-    mvprintw(7, 65, "bytes  [0x%x%x]\n\n", byte1_even, byte2_odd);
+    mvprintw(1, 65, "opcode [0x%02x]  [%d]", f, f);
+    mvprintw(2, 65, "nnn    [0x%04x]  [%d]", nnn, nnn);
+    mvprintw(3, 65, "n      [0x%02x]  [%d]", n, n);
+    mvprintw(4, 65, "x      [0x%02x]  [%d]", x, x);
+    mvprintw(5, 65, "y      [0x%02x]  [%d]", y, y);
+    mvprintw(6, 65, "kk     [0x%02x]  [%d]", kk, kk);
+    mvprintw(7, 65, "bytes  [0x%x%x]", byte1_even, byte2_odd);
 
     PC += 2;
     switch (f)
@@ -275,7 +275,7 @@ void Chip8::execute_one_instruction() {
             }
             break;
         default:
-            mvprintw(60, 65, "Unknown command; Exit(1)\n");
+            return;
             break;
     }
 }
