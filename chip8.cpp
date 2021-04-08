@@ -147,7 +147,7 @@ void Chip8::run() {
         duration<double> time_span = duration_cast<duration<double> >(f - s);
 
         double d = (1.0/500.0 - time_span.count());
-        if (cnt % 1 == 0) 
+        if (cnt % 16 == 0) 
             getch();
     }
 }
@@ -256,9 +256,9 @@ void Chip8::execute_one_instruction() {
                 case 0x1E: I = (V[x] + I) & 0x0fff; break;
                 case 0x29: I = V[x]*5; break;
                 case 0x33: 
-                    ram[I + 0] = V[V[x]] / 100;
-                    ram[I + 1] = (V[V[x]] / 10) % 10;
-                    ram[I + 2] = V[V[x]] % 10;
+                    ram[I + 0] = V[x] / 100;
+                    ram[I + 1] = (V[x] / 10) % 10;
+                    ram[I + 2] = V[x] % 10;
                     break;
                 case 0x55:
                     for (uint8_t i = 0; i <= x; ++i) {
