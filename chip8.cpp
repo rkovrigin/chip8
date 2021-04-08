@@ -74,9 +74,9 @@ void Chip8::init_screen_buffs() {
 uint8_t Chip8::draw_sprite(uint8_t Vx, uint8_t Vy, uint16_t I, uint8_t n) {
     Vy %= hight;
     Vx %= width;
-    mvprintw(20, 65, "Print %d[%d, %d]%d", I, Vx, Vy, n);
+    mvprintw(10, 65, "Print %d[%d, %d]%d", I, Vx, Vy, n);
     for (int i = 0; i < n; ++i) {
-        mvprintw(20 + i + 1, 65, "Sprite line 0x%x", ram[I + i]);
+        mvprintw(10 + i + 1, 65, "Sprite line 0x%x", ram[I + i]);
     }
 
     uint8_t vf = 0;
@@ -176,13 +176,13 @@ void Chip8::execute_one_instruction() {
     uint8_t kk = byte2_odd;
     uint8_t F = 0xF;
     
-    mvprintw(1, 65, "f    [0x%02x]  [%d]\n", f, f);
-    mvprintw(2, 65, "nnn  [0x%04x]  [%d]\n", nnn, nnn);
-    mvprintw(3, 65, "n    [0x%02x]  [%d]\n", n, n);
-    mvprintw(4, 65, "x    [0x%02x]  [%d]\n", x, x);
-    mvprintw(5, 65, "y    [0x%02x]  [%d]\n", y, y);
-    mvprintw(6, 65, "kk   [0x%02x]  [%d]\n", kk, kk);
-    mvprintw(7, 65, "bytes[0x%x%x]\n\n", byte1_even, byte2_odd);
+    mvprintw(1, 65, "opcode [0x%02x]  [%d]\n", f, f);
+    mvprintw(2, 65, "nnn    [0x%04x]  [%d]\n", nnn, nnn);
+    mvprintw(3, 65, "n      [0x%02x]  [%d]\n", n, n);
+    mvprintw(4, 65, "x      [0x%02x]  [%d]\n", x, x);
+    mvprintw(5, 65, "y      [0x%02x]  [%d]\n", y, y);
+    mvprintw(6, 65, "kk     [0x%02x]  [%d]\n", kk, kk);
+    mvprintw(7, 65, "bytes  [0x%x%x]\n\n", byte1_even, byte2_odd);
 
     PC += 2;
     switch (f)
