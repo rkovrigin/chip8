@@ -5,13 +5,13 @@ using namespace std;
 class Chip8 {
     private:
         uint8_t ram[4096];
-        uint8_t registers[16];
+        uint8_t V[16];
         uint16_t stack[16];
         uint16_t default_frequency;
         
         uint16_t programs_start_location;
         uint16_t programs_start_location_eti660;
-        uint16_t register_I; // only 12 bits are used. Values [0~4095]
+        uint16_t I; // only 12 bits are used. Values [0~4095]
         uint16_t program_length;
 
         uint8_t SP; // Stack Pointer

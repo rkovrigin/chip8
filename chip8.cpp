@@ -21,14 +21,14 @@ bool first_draw = true;
 
 Chip8::Chip8() {
     memset(&ram, 0, sizeof(ram));
-    memset(&registers, 0, sizeof(registers));
+    memset(&V, 0, sizeof(V));
     memset(&stack, 0, sizeof(stack));
     load_hex_digit_sprites();
     init_screen_buffs();
     programs_start_location = 0x200;
     programs_start_location_eti660 = 0x600;
     default_frequency = 500;
-    register_I = 0;
+    I = 0;
     SP = 0; // Stack pointer
     PC = programs_start_location; // Program counter
     DT = 0; // Display timer
@@ -37,7 +37,7 @@ Chip8::Chip8() {
     hight = 32;
 
     mvprintw(0, 65, "sizeof mem %d\n", sizeof(ram));
-    mvprintw(1, 65, "sizeof registers %d\n", sizeof(registers));
+    mvprintw(1, 65, "sizeof registers %d\n", sizeof(V));
     mvprintw(2, 65, "sizeof stack %d\n", sizeof(stack));
 }
 
@@ -108,6 +108,7 @@ void Chip8::clearscr() {
         screen[i] = new uint8_t[hight]();
         memset(screen[i], 0, hight);
     }
+    draw();
 }
 
 void Chip8::load_file_to_ram(string path) {
@@ -151,8 +152,8 @@ uint8_t one_byte(uint8_t high, uint8_t low) {
 }
 
 void Chip8::execute_one_instruction() {
-    uint8_t byte1_even = ram[PC] & 0xff;
-    uint8_t byte2_odd  = ram[PC + 1] & 0xff;
+    uint8_t byte1_even = ram[PC];
+    uint8_t byte2_odd  = ram[PC + 1];
 
     /*
      high byte  low byte
@@ -170,11 +171,9 @@ void Chip8::execute_one_instruction() {
 
     //Spec definitions
     uint8_t n = l;
-    uint16_t nnn = (((short)byte1_even)<<8 | byte2_odd) & 0xfff;
-    uint8_t kk = byte2_odd & 0xff;
-    uint8_t Vx = registers[x];
-    uint8_t Vy = registers[y];
-    uint8_t VF = 0xF;
+    uint16_t nnn = (((short)byte1_even) << 8 | byte2_odd) & 0xfff;
+    uint8_t kk = byte2_odd;
+    uint8_t F = 0xF;
     
     mvprintw(1, 65, "f    [0x%02x]  [%d]\n", f, f);
     mvprintw(2, 65, "nnn  [0x%04x]  [%d]\n", nnn, nnn);
@@ -196,32 +195,32 @@ void Chip8::execute_one_instruction() {
             }
             break;
         case 1: PC = nnn; break;
-        case 2: ++SP; stack[SP] = PC - 2; PC = nnn; break;
-        case 3: if (Vx == kk) PC += 2; break;
-        case 4: if (Vx != kk) PC += 2; break;
-        case 5: if (Vx == Vy) PC += 2; break;
-        case 6: if (Vx == kk) registers[x] = kk; break;
-        case 7: registers[x] += kk; break;
+        case 2: ++SP; stack[SP] = PC; PC = nnn; break;
+        case 3: if (V[x] == kk) PC += 2; break;
+        case 4: if (V[x] != kk) PC += 2; break;
+        case 5: if (V[x] == V[y]) PC += 2; break;
+        case 6: if (V[x] == kk) V[x] = kk; break;
+        case 7: V[x] += kk; break;
         case 8:
             switch (l) //math operations
             {
-                case 0: registers[x] = registers[y]; break;
-                case 1: registers[x] |= registers[y]; break;
-                case 2: registers[x] &= registers[y]; break;
-                case 3: registers[x] ^= registers[y]; break;
-                case 4: registers[VF] = ((uint16_t)Vx + (uint16_t)Vy)>255; registers[x] = (uint8_t)(Vx + Vy); break;
-                case 5: registers[VF] = Vx > Vy; registers[x] = Vx - Vy; break;
-                case 6: registers[VF] = Vx & 1; registers[x] /= 2; break;
-                case 7: registers[VF] = Vy > Vx; registers[x] = Vy - Vx; break;
-                case 0xE: registers[VF] = (Vx&0x80) ? 1 : 0; registers[x] *= 2; break;
+                case 0: V[x] = V[y]; break;
+                case 1: V[x] |= V[y]; break;
+                case 2: V[x] &= V[y]; break;
+                case 3: V[x] ^= V[y]; break;
+                case 4: V[F] = ((uint16_t)V[x] + (uint16_t)V[y])>255; V[x] = (uint8_t)(V[x] + V[y]); break;
+                case 5: V[F] = V[x] > V[y]; V[x] -= V[y]; break;
+                case 6: V[F] = V[x] & 1; V[x] /= 2; break;
+                case 7: V[F] = V[y] > V[x]; V[x] = V[y] - V[x]; break;
+                case 0xE: V[F] = (V[x] & 0x80) ? 1 : 0; V[x] *= 2; break;
                 default: break;
             }
             break;
-        case 9: if (Vx != Vy) PC += 2; break;
-        case 0xA: register_I = nnn; break;
-        case 0xB: PC = nnn + registers[0]; break;
-        case 0xC: registers[x] = (rand() & 256) & kk; break;
-        case 0xD: registers[VF] = draw_sprite(Vx, Vy, register_I, n); break;
+        case 9: if (V[x] != V[y]) PC += 2; break;
+        case 0xA: I = nnn; break;
+        case 0xB: PC = nnn + V[0]; break;
+        case 0xC: V[x] = (rand() & 256) & kk; break;
+        case 0xD: V[F] = draw_sprite(V[x], V[y], I, n); break;
         case 0xE:
             switch (byte2_odd)
             {
@@ -244,30 +243,30 @@ void Chip8::execute_one_instruction() {
             break;
         case 0xF:
             switch (byte2_odd) {
-                case 0x07: registers[x] = DT; break;
+                case 0x07: V[x] = DT; break;
                 case 0x0A: 
                     /*
                     Wait for a key press, store the value of the key in Vx.
                     All execution stops until a key is pressed, then the value of that key is stored in Vx.
                     */
                     break;
-                case 0x15: DT = registers[x]; break;
-                case 0x18: ST = registers[x]; break;
-                case 0x1E: register_I = (registers[x] + register_I) & 0x0fff; break;
-                case 0x29: register_I = Vx*5; break;
+                case 0x15: DT = V[x]; break;
+                case 0x18: ST = V[x]; break;
+                case 0x1E: I = (V[x] + I) & 0x0fff; break;
+                case 0x29: I = V[x]*5; break;
                 case 0x33: 
-                    ram[register_I + 0] = registers[Vx] / 100;
-                    ram[register_I + 1] = (registers[Vx] / 10) % 10;
-                    ram[register_I + 2] = registers[Vx] % 10;
+                    ram[I + 0] = V[V[x]] / 100;
+                    ram[I + 1] = (V[V[x]] / 10) % 10;
+                    ram[I + 2] = V[V[x]] % 10;
                     break;
                 case 0x55:
                     for (uint8_t i = 0; i <= x; ++i) {
-                        ram[register_I + i] = registers[i];
+                        ram[I + i] = V[i];
                     }
                     break;
                 case 0x65:
                     for (uint8_t i = 0; i <= x; ++i) {
-                        registers[i] = ram[register_I + i];
+                        V[i] = ram[I + i];
                     }
                     break;
                 default: 
