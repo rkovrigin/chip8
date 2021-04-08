@@ -90,8 +90,8 @@ uint8_t Chip8::draw_sprite(uint8_t Vx, uint8_t Vy, uint16_t I, uint8_t n) {
             if (pos_x >= width) 
                 continue;
             uint8_t tmp = screen[pos_x][pos_y];
-            //screen[pos_x][pos_y] ^= ((sprite_line >> shift) & 1);
-            screen[pos_x][pos_y] = ((sprite_line >> shift) & 1); // works better, don't know why
+            screen[pos_x][pos_y] ^= ((sprite_line >> shift) & 1);
+            // screen[pos_x][pos_y] = ((sprite_line >> shift) & 1); // works better, don't know why
             if ((tmp == 1) && (screen[pos_x][pos_y] == 0)) {
                 vf = 1;
             }
@@ -147,7 +147,7 @@ void Chip8::run() {
         duration<double> time_span = duration_cast<duration<double> >(f - s);
 
         double d = (1.0/500.0 - time_span.count());
-        if (cnt % 16 == 0) 
+        if (cnt % 32 == 0) 
             getch();
     }
 }
@@ -220,7 +220,7 @@ void Chip8::execute_one_instruction() {
         case 9: if (V[x] != V[y]) PC += 2; break;
         case 0xA: I = nnn; break;
         case 0xB: PC = nnn + V[0]; break;
-        case 0xC: V[x] = (rand() & 256) & kk; break;
+        case 0xC: V[x] = (rand() % 256) & kk; break;
         case 0xD: V[F] = draw_sprite(V[x], V[y], I, n); break;
         case 0xE:
             switch (byte2_odd)
