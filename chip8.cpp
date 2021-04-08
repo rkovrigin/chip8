@@ -28,7 +28,7 @@ Chip8::Chip8() {
     programs_start_location = 0x200;
     programs_start_location_eti660 = 0x600;
     default_frequency = 500;
-    I = 0;
+    I = 0; // 16 bits register
     SP = 0; // Stack pointer
     PC = programs_start_location; // Program counter
     DT = 0; // Display timer
@@ -132,7 +132,6 @@ void Chip8::run() {
     srand (time(NULL));
 
     int cnt = 0;
-    getch();
     while(true) {
         mvprintw(0, 65, "---PC [0x%x] {%d}---\n", PC, cnt++);
         high_resolution_clock::time_point s = high_resolution_clock::now();
@@ -145,10 +144,6 @@ void Chip8::run() {
         if (cnt % 1 == 0) 
             getch();
     }
-}
-
-uint8_t one_byte(uint8_t high, uint8_t low) {
-    return (high << 4) | low;
 }
 
 void Chip8::execute_one_instruction() {
