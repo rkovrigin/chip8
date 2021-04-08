@@ -72,6 +72,8 @@ void Chip8::init_screen_buffs() {
 }
 
 uint8_t Chip8::draw_sprite(uint8_t Vx, uint8_t Vy, uint16_t I, uint8_t n) {
+    Vy %= hight;
+    Vx %= width;
     mvprintw(20, 65, "Print %d[%d, %d]%d", I, Vx, Vy, n);
     for (int i = 0; i < n; ++i) {
         mvprintw(20 + i + 1, 65, "Sprite line 0x%x", ram[I + i]);
@@ -80,12 +82,16 @@ uint8_t Chip8::draw_sprite(uint8_t Vx, uint8_t Vy, uint16_t I, uint8_t n) {
     uint8_t vf = 0;
     for (uint8_t i = 0; i < n; ++i) {
         uint8_t sprite_line = ram[I + i];
-        uint8_t pos_y = (Vy + i) % hight;
+        uint8_t pos_y = (Vy + i);
+        if (pos_y >= hight) 
+            return vf;
         for (int shift = 0; shift < 8; ++shift) {
-            uint8_t pos_x = (Vx + 7 - shift) % width;
+            uint8_t pos_x = (Vx + 7 - shift);
+            if (pos_x >= width) 
+                continue;
             uint8_t tmp = screen[pos_x][pos_y];
-            screen[pos_x][pos_y] ^= ((sprite_line >> shift) & 1);
-            // screen[pos_x][pos_y] = ((sprite_line >> shift) & 1); // works better, don't know why
+            //screen[pos_x][pos_y] ^= ((sprite_line >> shift) & 1);
+            screen[pos_x][pos_y] = ((sprite_line >> shift) & 1); // works better, don't know why
             if ((tmp == 1) && (screen[pos_x][pos_y] == 0)) {
                 vf = 1;
             }
@@ -166,7 +172,7 @@ void Chip8::execute_one_instruction() {
 
     //Spec definitions
     uint8_t n = l;
-    uint16_t nnn = (((short)byte1_even) << 8 | byte2_odd) & 0xfff;
+    uint16_t nnn = (((uint16_t)byte1_even) << 8 | byte2_odd) & 0xfff;
     uint8_t kk = byte2_odd;
     uint8_t F = 0xF;
     
@@ -194,7 +200,7 @@ void Chip8::execute_one_instruction() {
         case 3: if (V[x] == kk) PC += 2; break;
         case 4: if (V[x] != kk) PC += 2; break;
         case 5: if (V[x] == V[y]) PC += 2; break;
-        case 6: if (V[x] == kk) V[x] = kk; break;
+        case 6: V[x] = kk; break;
         case 7: V[x] += kk; break;
         case 8:
             switch (l) //math operations
@@ -207,7 +213,7 @@ void Chip8::execute_one_instruction() {
                 case 5: V[F] = V[x] > V[y]; V[x] -= V[y]; break;
                 case 6: V[F] = V[x] & 1; V[x] /= 2; break;
                 case 7: V[F] = V[y] > V[x]; V[x] = V[y] - V[x]; break;
-                case 0xE: V[F] = (V[x] & 0x80) ? 1 : 0; V[x] *= 2; break;
+                case 0xE: V[F] = (V[x] >> 7) & 1; V[x] *= 2; break;
                 default: break;
             }
             break;
