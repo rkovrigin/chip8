@@ -28,6 +28,7 @@ Chip8::Chip8() {
     programs_start_location = 0x200;
     programs_start_location_eti660 = 0x600;
     default_frequency = 500;
+    Hz_rate = 60;
     I = 0; // 16 bits register
     SP = 0; // Stack pointer
     PC = programs_start_location; // Program counter
@@ -39,6 +40,7 @@ Chip8::Chip8() {
     mvprintw(0, 65, "sizeof mem %d", sizeof(ram));
     mvprintw(1, 65, "sizeof registers %d", sizeof(V));
     mvprintw(2, 65, "sizeof stack %d", sizeof(stack));
+    refresh();
 }
 
 void Chip8::load_hex_digit_sprites() {
@@ -138,17 +140,19 @@ void Chip8::run() {
 
     int cnt = 0;
     while(true) {
-        mvprintw(0, 65, "---PC [0x%x] {%d}---", PC, cnt++);
-        high_resolution_clock::time_point s = high_resolution_clock::now();
+        mvprintw(0, 65, "---PC [0x%x] {%d}---\n", PC, cnt++);
+
+        milliseconds s = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         execute_one_instruction();
-        high_resolution_clock::time_point f = high_resolution_clock::now();
+        milliseconds f = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        uint32_t d = (1000 - (f - s).count()*1000);
 
-        duration<double> time_span = duration_cast<duration<double> >(f - s);
+        usleep(d*1000/Hz_rate);
+        mvprintw(31, 65, ">>> %d <<<\n", (f - s).count());
+        mvprintw(32, 65, ">>> %d <<<\n", d);
+        refresh();
 
-        double d = (1.0/500.0 - time_span.count());
-        if (cnt % 32 == 0)  {
-            getch();
-        }
+        if (DT > 0) --DT;
     }
 }
 

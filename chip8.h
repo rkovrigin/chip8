@@ -22,6 +22,7 @@ class Chip8 {
         uint8_t width, hight;
         uint8_t **screen;
         uint8_t active_buffer_idx; // active screen buffer index
+        uint8_t Hz_rate;
 
         void execute_one_instruction();
         void load_hex_digit_sprites();
