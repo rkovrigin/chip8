@@ -16,6 +16,7 @@
 
 
 using namespace std;
+using namespace std::chrono;
 
 bool first_draw = true;
 
@@ -125,14 +126,6 @@ void Chip8::load_file_to_ram(string path) {
                             sizeof(ram) - programs_start_location, 
                             filp);
 }
-
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
-using std::chrono::microseconds;
-using std::chrono::seconds;
-using std::chrono::system_clock;
-using std::chrono::high_resolution_clock;
-using namespace std::chrono;
 
 void Chip8::run() {
     PC = programs_start_location;
