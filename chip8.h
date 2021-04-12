@@ -30,6 +30,7 @@ class Chip8 {
         uint8_t draw_sprite(uint8_t Vx, uint8_t Vy, uint16_t I, uint8_t n);
         void clearscr();
         void draw();
+        uint8_t get_key();
 
     public:
         Chip8();

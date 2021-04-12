@@ -132,21 +132,46 @@ void Chip8::run() {
     srand (time(NULL));
 
     int cnt = 0;
+
+    auto lastCycleTime = std::chrono::high_resolution_clock::now();
+
     while(true) {
         mvprintw(0, 65, "---PC [0x%x] {%d}---\n", PC, cnt++);
 
-        milliseconds s = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-        execute_one_instruction();
-        milliseconds f = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-        uint32_t d = (1000 - (f - s).count()*1000);
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float dt = std::chrono::duration<float, std::chrono::milliseconds::period>(currentTime - lastCycleTime).count();
 
-        usleep(d*1000/Hz_rate);
-        mvprintw(31, 65, ">>> %d <<<\n", (f - s).count());
-        mvprintw(32, 65, ">>> %d <<<\n", d);
-        refresh();
-
-        if (DT > 0) --DT;
+        if (dt > 1000 / default_frequency)  {
+            lastCycleTime = currentTime;
+            execute_one_instruction();
+            if (DT > 0) --DT;
+        }
     }
+}
+
+uint8_t Chip8::get_key() {
+    uint8_t key = getch();
+    switch (key)
+    {
+        case 0x1: key = 0x1; break;
+        case 0x2: key = 0x2; break;
+        case 0x3: key = 0x3; break;
+        case 0x4: key = 0xc; break;
+        case 'q': key = 0x4; break;
+        case 'w': key = 0x5; break;
+        case 'e': key = 0x6; break;
+        case 'r': key = 0xd; break;
+        case 'a': key = 0x7; break;
+        case 's': key = 0x8; break;
+        case 'd': key = 0x9; break;
+        case 'f': key = 0xe; break;
+        case 'z': key = 0xa; break;
+        case 'x': key = 0x0; break;
+        case 'c': key = 0xb; break;
+        case 'v': key = 0xf; break;
+        default: key = ERR; break;
+    }
+    return key;
 }
 
 void Chip8::execute_one_instruction() {
@@ -180,6 +205,8 @@ void Chip8::execute_one_instruction() {
     mvprintw(5, 65, "y      [0x%02x]  [%d]", y, y);
     mvprintw(6, 65, "kk     [0x%02x]  [%d]", kk, kk);
     mvprintw(7, 65, "bytes  [0x%x%x]", byte1_even, byte2_odd);
+    char key = ERR;
+    int __i = 0;
 
     PC += 2;
     switch (f)
@@ -222,31 +249,25 @@ void Chip8::execute_one_instruction() {
         case 0xE:
             switch (byte2_odd)
             {
-                case 0x9E:
-                    /*
-                    Ex9E - SKP Vx
-                    Skip next instruction if key with the value of Vx is pressed.
-                    Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
-                    */
-                    break;
+                case 0x9E: 
+                    key = get_key();
+                    // mvprintw(8, 65, "9E Pressed button is [%d]", key);
+                    if (key == V[x]) PC += 2; flushinp(); break;
                 case 0xA1:
-                    /*
-                    Skip next instruction if key with the value of Vx is not pressed.
-                    Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
-                    */
-                    break;
-                default: 
-                    break;
+                    key = get_key();
+                    // mvprintw(9, 65, "A1 Pressed button is [%d]", key);
+                    if (key != V[x]) PC += 2; flushinp(); break;
+                default: flushinp(); break;
             }
             break;
         case 0xF:
             switch (byte2_odd) {
                 case 0x07: V[x] = DT; break;
                 case 0x0A: 
-                    /*
-                    Wait for a key press, store the value of the key in Vx.
-                    All execution stops until a key is pressed, then the value of that key is stored in Vx.
-                    */
+                    while (!key) {
+                        key = get_key();
+                    }
+                    V[x] = key;
                     break;
                 case 0x15: DT = V[x]; break;
                 case 0x18: ST = V[x]; break;
