@@ -28,10 +28,10 @@ int main() {
     // name = "Breakout [Carmelo Cortez, 1979].ch8";
     // name = "Chip8 emulator Logo [Garstyciuks].ch8";
     // name = "Particle Demo [zeroZshadow, 2008].ch8";
-    // name = "Space Invaders [David Winter].ch8";
+    name = "Space Invaders [David Winter].ch8";
     // name = "Brix [Andreas Gustafsson, 1990].ch8";
     // name = "Clock Program [Bill Fisher, 1981].ch8";
-    name = "Tetris [Fran Dachille, 1991].ch8";
+    // name = "Tetris [Fran Dachille, 1991].ch8";
     // name = "Breakout [Carmelo Cortez, 1979].ch8";
     chip8.load_file_to_ram("roms/" + name);
     chip8.run();

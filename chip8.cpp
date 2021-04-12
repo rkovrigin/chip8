@@ -136,16 +136,20 @@ void Chip8::run() {
     auto lastCycleTime = std::chrono::high_resolution_clock::now();
 
     while(true) {
-        mvprintw(0, 65, "---PC [0x%x] {%d}---\n", PC, cnt++);
+        mvprintw(0, 65, "---PC [0x%x] {%d}---\n", PC, cnt);
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         float dt = std::chrono::duration<float, std::chrono::milliseconds::period>(currentTime - lastCycleTime).count();
 
+        int t = 500;
+
         if (dt > 1000 / default_frequency)  {
             lastCycleTime = currentTime;
             execute_one_instruction();
-            if (DT > 0) --DT;
-        }
+            if (DT > 0 && cnt % 8 == 0) DT -= 1;
+            refresh();
+            ++cnt;
+        }        
     }
 }
 
@@ -264,10 +268,10 @@ void Chip8::execute_one_instruction() {
             switch (byte2_odd) {
                 case 0x07: V[x] = DT; break;
                 case 0x0A: 
-                    while (!key) {
-                        key = get_key();
-                    }
-                    V[x] = key;
+                    // while (!key) {
+                    //     key = get_key();
+                    // }
+                    // V[x] = key;
                     break;
                 case 0x15: DT = V[x]; break;
                 case 0x18: ST = V[x]; break;
